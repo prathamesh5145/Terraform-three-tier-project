@@ -17,7 +17,7 @@ resource "aws_vpc" "projectvpc" {
     }
 }
 #creating private subnet 
-resource "aws_subnet" "peoject-private-subnet" {
+resource "aws_subnet" "project-private-subnet" {
     vpc_id = aws_vpc.projectvpc.id
     cidr_block = "10.0.0.0/20"
     tags = {
@@ -26,12 +26,12 @@ resource "aws_subnet" "peoject-private-subnet" {
     } 
 }
 #creating public subnet 
-resource "aws_subnet" "peoject-public-subnet" {
+resource "aws_subnet" "project-public-subnet" {
     vpc_id = aws_vpc.projectvpc.id
     cidr_block = "10.0.0.0/24"
     map_public_ip_on_launch = true
     tags = {
-      Name = "peoject-public-subnet"
+      Name = "project-public-subnet"
       env =  "dev"
     }  
 }
@@ -45,7 +45,7 @@ resource "aws_internet_gateway" "project-igw" {
 }
 #creating nat gateway 
 resource "aws_nat_gateway" "private-nat" {
-    subnet_id = aws_subnet.peoject-public-subnet.id
+    subnet_id = aws_subnet.project-public-subnet.id
     connectivity_type = "private"
     tags = {
       Name = "private-nat"
@@ -71,16 +71,16 @@ resource "aws_route" "private-route-table" {
 }
 #associating subnet ids
 resource "aws_route_table_association" "public-subnet-association" {
-    subnet_id = aws_subnet.peoject-public-subnet.id
+    subnet_id = aws_subnet.project-public-subnet.id
     route_table_id = aws_vpc.projectvpc.default_route_table_id
 }
 resource "aws_route_table_association" "private-subnet-association" {
-    subnet_id = aws_subnet.peoject-private-subnet.id
+    subnet_id = aws_subnet.project-private-subnet.id
     route_table_id = aws_route_table.private-nat-route-table.id
 }
 #creating security group
 resource "aws_security_group" "project-sg" {
-    name = project-sg
+    name = "project-sg"
     description = "all tcp sg for project" 
     vpc_id = aws_vpc.projectvpc.id
     ingress {
@@ -102,7 +102,7 @@ resource "aws_instance" "DB-server" {
     instance_type = "t2.small"
     key_name = "lallya"
     vpc_security_group_ids = [aws_security_group.project-sg.id]
-    subnet_id = aws_subnet.peoject-private-subnet.id
+    subnet_id = aws_subnet.project-private-subnet.id
     user_data = file("install_mariadb.sh")
 }
 resource "aws_instance" "app-server" {
@@ -110,7 +110,7 @@ resource "aws_instance" "app-server" {
     instance_type = "t2.small"
     key_name = "lallya"
     vpc_security_group_ids = [aws_security_group.project-sg.id]
-    subnet_id = aws_subnet.peoject-private-subnet.id
+    subnet_id = aws_subnet.project-private-subnet.id
     user_data = file("install_tomcat.sh")
 }
 resource "aws_instance" "web-server" {
@@ -118,7 +118,7 @@ resource "aws_instance" "web-server" {
     instance_type = "t2.small"
     key_name = "lallya"
     vpc_security_group_ids = [aws_security_group.project-sg.id]
-    subnet_id = aws_subnet.peoject-private-subnet.id
+    subnet_id = aws_subnet.project-private-subnet.id
     user_data = file("install_httpd.sh")
 }
 resource "aws_instance" "bashan-server" {
@@ -126,5 +126,5 @@ resource "aws_instance" "bashan-server" {
     instance_type = "t2.small"
     key_name = "lallya"
     vpc_security_group_ids = [aws_security_group.project-sg.id]
-    subnet_id = aws_subnet.peoject-public-subnet.id
+    subnet_id = aws_subnet.project-public-subnet.id
 }
